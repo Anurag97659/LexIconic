@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import { apiFetch } from "../../../utils/api";
@@ -25,10 +25,10 @@ interface WordItem {
   };
 }
 
-export default function WordDetailsPage() {
+function WordDetailsContent() {
   const router = useRouter();
-  const params = useParams();
-  const { id } = params;
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
 
   const [currentUser, setCurrentUser] = useState<{ _id: string; username: string } | null>(null);
   const [wordData, setWordData] = useState<WordItem | null>(null);
@@ -241,5 +241,23 @@ export default function WordDetailsPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function WordDetailsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+        <Navbar />
+        <main className="flex-1 max-w-3xl w-full mx-auto p-6 md:p-8 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-full border-4 border-t-violet-500 border-indigo-500/10 animate-spin" />
+            <span className="text-slate-650 dark:text-slate-400 text-sm font-semibold">Loading details...</span>
+          </div>
+        </main>
+      </div>
+    }>
+      <WordDetailsContent />
+    </Suspense>
   );
 }

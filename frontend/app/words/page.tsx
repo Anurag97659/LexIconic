@@ -185,7 +185,7 @@ export default function WordListPage() {
               return (
                 <Link
                   key={item._id}
-                  href={`/words/${item._id}`}
+                  href={`/words/details?id=${item._id}`}
                   className="group flex flex-col justify-between bg-card hover:bg-card-hover border border-border rounded-3xl p-6 shadow-lg transition-all duration-300 hover:shadow-violet-650/5 hover:-translate-y-0.5 cursor-pointer relative overflow-hidden"
                 >
                   {/* Subtle color highlight if it's user's own word */}
