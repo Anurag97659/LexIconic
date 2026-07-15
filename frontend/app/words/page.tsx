@@ -18,6 +18,7 @@ interface WordItem {
   synonyms: string[];
   antonyms: string[];
   examples: string[];
+  note?: string;
   createdBy?: {
     _id: string;
     username: string;
@@ -209,7 +210,6 @@ export default function WordListPage() {
                       {item.definitions[0]?.definition || "No definition available."}
                     </p>
                   </div>
-
                   <div className="flex flex-wrap gap-1.5 pt-4 border-t border-border">
                     {Array.from(new Set(item.definitions.map((d) => d.partOfSpeech))).map((pos) => (
                       <span
@@ -224,7 +224,24 @@ export default function WordListPage() {
                         {item.synonyms.length} synonyms
                       </span>
                     )}
+                    {item.antonyms.length > 0 && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-500/5 text-indigo-650 dark:text-indigo-400 border border-indigo-500/5 ml-auto">
+                        {item.antonyms.length} antonyms
+                      </span>
+                    )}
                   </div>
+
+                  {item.note && (
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <span className="inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-violet-600/10 text-violet-650 dark:text-violet-400 border border-violet-500/10 mb-2">
+                        Your note
+                      </span>
+                      <p className="rounded-xl border border-border bg-background px-3 py-2 text-sm text-slate-650 dark:text-slate-400 leading-relaxed font-medium line-clamp-3 whitespace-pre-wrap">
+                        {item.note}
+                      </p>
+                    </div>
+                  )}
+
                 </Link>
               );
             })}

@@ -18,6 +18,7 @@ interface WordItem {
   synonyms: string[];
   antonyms: string[];
   examples: string[];
+  note?: string;
   createdBy?: {
     _id: string;
     username: string;
@@ -34,6 +35,9 @@ function WordDetailsContent() {
   const [wordData, setWordData] = useState<WordItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [note, setNote] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
+  const [noteError, setNoteError] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -52,6 +56,7 @@ function WordDetailsContent() {
       .then((res) => {
         if (res?.data) {
           setWordData(res.data);
+          setNote(res.data.note || "");
         }
       })
       .catch((err) => {
@@ -75,6 +80,28 @@ function WordDetailsContent() {
     } catch (err: any) {
       setError(err.message || "Failed to delete word");
       setDeleting(false);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!id || !isAuthor || !note.trim()) return;
+
+    setSavingNote(true);
+    setNoteError("");
+
+    try {
+      const res = await apiFetch(`/WoahCab/words/note/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ note }),
+      });
+      if (res?.data) {
+        setWordData(res.data);
+        setNote(res.data.note || "");
+      }
+    } catch (err: unknown) {
+      setNoteError(err instanceof Error ? err.message : "Failed to save note");
+    } finally {
+      setSavingNote(false);
     }
   };
 
@@ -237,6 +264,46 @@ function WordDetailsContent() {
                 <p className="text-slate-500 text-xs italic">No example sentences available.</p>
               )}
             </div>
+
+            {isAuthor && (
+              <div className="border-t border-border pt-8 mt-8">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Your Note</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-450 mt-1 font-medium">
+                      Private to you and shown at the bottom of this word on your dashboard.
+                    </p>
+                  </div>
+                  <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-450 shrink-0">
+                    {note.length}/1000
+                  </span>
+                </div>
+
+                <textarea
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  maxLength={1000}
+                  rows={4}
+                  placeholder="Add a memory tip, context, or anything useful about this word..."
+                  className="w-full resize-y px-4 py-3 bg-background border border-border rounded-2xl text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition-all font-medium"
+                />
+
+                {noteError && (
+                  <p className="mt-3 text-sm text-red-600 dark:text-red-400 font-medium">{noteError}</p>
+                )}
+
+                <div className="flex justify-end mt-4">
+                  <button
+                    type="button"
+                    onClick={handleSaveNote}
+                    disabled={savingNote || !note.trim()}
+                    className="py-2.5 px-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {savingNote ? "Saving..." : wordData.note ? "Update Note" : "Save Note"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

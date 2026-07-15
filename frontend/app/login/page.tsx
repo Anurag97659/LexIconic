@@ -40,7 +40,7 @@ export default function LoginPage() {
         <div className="backdrop-blur-xl bg-card border border-border rounded-3xl p-8 shadow-2xl transition-all duration-300 hover:border-violet-500/20">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-650 dark:from-violet-400 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent">
-              WoahCab
+              LexIconic
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm font-medium">
               Expand your vocabulary, one word at a time.

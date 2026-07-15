@@ -5,6 +5,20 @@ import { Word } from "../models/word.model.js";
 import { User } from "../models/user.model.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// Notes are personal. Never return the notes array because it can contain
+// notes belonging to other users. A viewer receives only their own note.
+const formatWordForViewer = (word, userId) => {
+  const wordObject = word.toObject ? word.toObject() : word;
+  const { notes = [], ...safeWord } = wordObject;
+
+  if (!userId) {
+    return safeWord;
+  }
+
+  const viewerNote = notes.find((note) => note.user?.toString() === userId.toString());
+  return viewerNote ? { ...safeWord, note: viewerNote.content } : safeWord;
+};
+
 const createWord = asyncHandler(async (req, res) => {
   const { word } = req.body;
   const userId = req.user._id;
@@ -75,7 +89,7 @@ Provide definitions for different parts of speech if applicable (e.g. noun, adje
       createdBy: userId
     });
 
-    res.status(201).json(new ApiResponse(201, newWord, "Word created successfully"));
+    res.status(201).json(new ApiResponse(201, formatWordForViewer(newWord, userId), "Word created successfully"));
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(500, `Error generating word details via Gemini: ${error.message}`);
@@ -84,7 +98,8 @@ Provide definitions for different parts of speech if applicable (e.g. noun, adje
 
 const getWords = asyncHandler(async (req, res) => {
   const words = await Word.find().populate("createdBy", "username fullname");
-  res.status(200).json(new ApiResponse(200, words, "Words retrieved successfully"));
+  const wordsForViewer = words.map((word) => formatWordForViewer(word, req.user?._id));
+  res.status(200).json(new ApiResponse(200, wordsForViewer, "Words retrieved successfully"));
 });
 
 const getWordById = asyncHandler(async (req, res) => {
@@ -95,7 +110,7 @@ const getWordById = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Word not found");
   }
 
-  res.status(200).json(new ApiResponse(200, word, "Word retrieved successfully"));
+  res.status(200).json(new ApiResponse(200, formatWordForViewer(word, req.user?._id), "Word retrieved successfully"));
 });
 
 const updateWord = asyncHandler(async (req, res) => {
@@ -112,7 +127,41 @@ const updateWord = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Word not found");
   }
 
-  res.status(200).json(new ApiResponse(200, updatedWord, "Word updated successfully"));
+  res.status(200).json(new ApiResponse(200, formatWordForViewer(updatedWord, req.user?._id), "Word updated successfully"));
+});
+
+const saveNote = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body;
+
+  if (typeof note !== "string" || !note.trim()) {
+    throw new ApiError(400, "Note cannot be empty");
+  }
+  if (note.trim().length > 1000) {
+    throw new ApiError(400, "Note cannot be longer than 1000 characters");
+  }
+
+  const word = await Word.findById(id);
+  if (!word) {
+    throw new ApiError(404, "Word not found");
+  }
+
+  if (word.createdBy.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You can only add notes to words you created");
+  }
+
+  const cleanNote = note.trim();
+  const existingNote = word.notes.find((wordNote) => wordNote.user.toString() === req.user._id.toString());
+
+  if (existingNote) {
+    existingNote.content = cleanNote;
+  } else {
+    word.notes.push({ user: req.user._id, content: cleanNote });
+  }
+
+  await word.save();
+  await word.populate("createdBy", "username fullname");
+  res.status(200).json(new ApiResponse(200, formatWordForViewer(word, req.user._id), "Note saved successfully"));
 });
 
 const deleteWord = asyncHandler(async (req, res) => {
@@ -190,7 +239,8 @@ Return a JSON array of matching word IDs (strings) from the vocabulary bank. If 
       .map(id => words.find(w => w._id.toString() === id))
       .filter(Boolean);
 
-    res.status(200).json(new ApiResponse(200, matchedWords, "Semantic search completed"));
+    const wordsForViewer = matchedWords.map((word) => formatWordForViewer(word, req.user?._id));
+    res.status(200).json(new ApiResponse(200, wordsForViewer, "Semantic search completed"));
   } catch (error) {
     console.error("Semantic search failed:", error);
     const query = q.toLowerCase();
@@ -204,7 +254,8 @@ Return a JSON array of matching word IDs (strings) from the vocabulary bank. If 
       );
       return wordMatch || definitionMatch || posMatch;
     });
-    res.status(200).json(new ApiResponse(200, fallbackWords, "Semantic search fallback completed"));
+    const wordsForViewer = fallbackWords.map((word) => formatWordForViewer(word, req.user?._id));
+    res.status(200).json(new ApiResponse(200, wordsForViewer, "Semantic search fallback completed"));
   }
 });
 
@@ -213,6 +264,7 @@ export {
   getWords,
   getWordById,
   updateWord,
+  saveNote,
   deleteWord,
   searchWords
 };

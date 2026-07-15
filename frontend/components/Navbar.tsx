@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "../utils/api";
@@ -9,6 +9,8 @@ export default function Navbar() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     
@@ -35,6 +37,27 @@ export default function Navbar() {
     }
   }, []);
 
+  useEffect(() => {
+    const closeMenuOnOutsideClick = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    const closeMenuOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", closeMenuOnOutsideClick);
+    document.addEventListener("keydown", closeMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenuOnOutsideClick);
+      document.removeEventListener("keydown", closeMenuOnEscape);
+    };
+  }, []);
+
   const toggleTheme = () => {
     if (theme === "dark") {
       setTheme("light");
@@ -48,6 +71,7 @@ export default function Navbar() {
   };
 
   const handleLogout = async () => {
+    setIsAccountMenuOpen(false);
     try {
       await apiFetch("/WoahCab/users/logout", { method: "POST" });
       setUsername("");
@@ -58,44 +82,56 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-900/80 px-6 py-4 transition-all duration-300">
+    <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-900/80 px-4 sm:px-6 py-4 transition-all duration-300">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/words" className="flex items-center gap-2 group">
           <span className="text-2xl font-extrabold bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-600 dark:from-violet-400 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent group-hover:opacity-95 transition-all">
-            WoahCab
+            LexIconic
           </span>
         </Link>
 
         {/* Right side menu actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link
             href="/words/submit"
-            className="flex items-center gap-2 py-2 px-4 rounded-xl bg-violet-600/10 hover:bg-violet-600/20 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:border-violet-500/30 transition-all font-medium text-sm"
+            className="flex items-center gap-2 py-2 px-3 sm:px-4 rounded-xl bg-violet-600/10 hover:bg-violet-600/20 text-violet-600 dark:text-violet-400 border border-violet-500/20 hover:border-violet-500/30 transition-all font-medium text-sm"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
             </svg>
-            Add Word
+            <span className="hidden sm:inline">Add Word</span>
           </Link>
 
           {/* User dropdown area */}
-          <div className="relative group py-2">
-            <button className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors font-semibold text-sm">
-              <span>{username ? `@${username}` : "User"}</span>
-              <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div ref={accountMenuRef} className="relative group py-2">
+            <button
+              type="button"
+              onClick={() => setIsAccountMenuOpen((isOpen) => !isOpen)}
+              aria-expanded={isAccountMenuOpen}
+              aria-controls="account-menu"
+              className="flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:text-violet-600 dark:hover:text-violet-400 transition-colors font-semibold text-sm cursor-pointer"
+            >
+              <span className="max-w-24 truncate sm:max-w-none">{username ? `@${username}` : "User"}</span>
+              <svg className={`w-4 h-4 transition-transform ${isAccountMenuOpen ? "rotate-180" : "md:group-hover:rotate-180"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
-            {/* Dropdown Menu Container (Hover Triggered) */}
-            <div className="absolute right-0 top-full pt-1.5 w-52 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 hidden group-hover:block transition-all duration-300 z-50">
+            {/* Dropdown Menu Container */}
+            <div
+              id="account-menu"
+              className={`absolute right-0 top-full pt-1.5 w-52 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 transition-all duration-300 z-50 ${
+                isAccountMenuOpen ? "block" : "hidden md:group-hover:block"
+              }`}
+            >
               
               {/* Conditional options depending on Auth */}
               {username ? (
                 <>
                   <Link
                     href="/settings"
+                    onClick={() => setIsAccountMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3.5 py-3 text-xs font-semibold text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-all"
                   >
                     <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,6 +154,7 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/login"
+                    onClick={() => setIsAccountMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3.5 py-3 text-xs font-semibold text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-all"
                   >
                     <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,6 +164,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/register"
+                    onClick={() => setIsAccountMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3.5 py-3 text-xs font-semibold text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800/60 rounded-xl transition-all"
                   >
                     <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

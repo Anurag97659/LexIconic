@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
+/* Make Tailwind's dark: utilities follow the navbar's html.dark toggle. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
-  --foreground: #0f172a; /* Slate-900 */
+  --foreground: #111111; /* Near-black text for light mode */
   --card: #f8fafc;       /* Slate-50 */
   --card-hover: #f1f5f9; /* Slate-100 */
   --border: #e2e8f0;     /* Slate-200 */
   --text-muted: #64748b; /* Slate-500 */
   --accent: #4f46e5;     /* Indigo-600 */
+  color-scheme: light;
 }
 
 html.dark {
   --background: #0d1117; /* GitHub Dark background */
-  --foreground: #c9d1d9; /* GitHub Dark text primary */
+  --foreground: #ffffff; /* White text for dark mode */
   --card: #161b22;       /* GitHub Dark card/container background */
   --card-hover: #1f242c; /* Slightly lighter card hover */
   --border: #30363d;     /* GitHub Dark border */
   --text-muted: #8b949e; /* GitHub Dark text secondary */
   --accent: #58a6ff;     /* GitHub Dark accent (blue) */
+  color-scheme: dark;
 }
 
 @theme inline {
