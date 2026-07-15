@@ -94,7 +94,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     if (incomingRefreshToken !== user?.refreshToken)
       throw new ApiError(400, "Invalid refresh token");
 
-    const options = { httpOnly: true, secure: true };
+    const options = { httpOnly: true, secure: true, sameSite: "none" };
     const { accessToken, newRefreshToken } =
       await generateAccessTokenAndRefreshToken(user._id);
 
@@ -144,7 +144,8 @@ const loginuser=asyncHandler(async(req,res)=>{
     // console.log('refreshToken = ',refreshToken);
     const options={
         httpOnly:true,
-        secure:true
+        secure:true,
+        sameSite: "none"
    };
     return res
         .status(200)
@@ -165,7 +166,7 @@ const logoutuser = asyncHandler(async (req, res) => {
     { $unset: { refreshToken: 1 } },
     { new: true }
   );
-  const options = { httpOnly: true, secure: true };
+  const options = { httpOnly: true, secure: true, sameSite: "none" };
   return res
     .status(200)
     .clearCookie("accessToken", options)
