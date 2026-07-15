@@ -1,0 +1,245 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import Navbar from "../../../components/Navbar";
+import { apiFetch } from "../../../utils/api";
+
+interface Definition {
+  partOfSpeech: string;
+  definition: string;
+}
+
+interface WordItem {
+  _id: string;
+  word: string;
+  definitions: Definition[];
+  synonyms: string[];
+  antonyms: string[];
+  examples: string[];
+  createdBy?: {
+    _id: string;
+    username: string;
+    fullname: string;
+  };
+}
+
+export default function WordDetailsPage() {
+  const router = useRouter();
+  const params = useParams();
+  const { id } = params;
+
+  const [currentUser, setCurrentUser] = useState<{ _id: string; username: string } | null>(null);
+  const [wordData, setWordData] = useState<WordItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // 1. Fetch current logged-in user profile
+    apiFetch("/WoahCab/users/getProfile")
+      .then((res) => {
+        if (res?.data) {
+          setCurrentUser(res.data);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch word details
+    if (!id) return;
+    apiFetch(`/WoahCab/words/getword/${id}`)
+      .then((res) => {
+        if (res?.data) {
+          setWordData(res.data);
+        }
+      })
+      .catch((err) => {
+        setError(err.message || "Failed to load word details");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this word?")) return;
+    setDeleting(true);
+    setError("");
+
+    try {
+      await apiFetch(`/WoahCab/words/deleteword/${id}`, {
+        method: "DELETE",
+      });
+      router.push("/words");
+    } catch (err: any) {
+      setError(err.message || "Failed to delete word");
+      setDeleting(false);
+    }
+  };
+
+  const isAuthor = wordData?.createdBy && currentUser && wordData.createdBy._id === currentUser._id;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+        <Navbar />
+        <main className="flex-1 max-w-3xl w-full mx-auto p-6 md:p-8 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-full border-4 border-t-violet-500 border-indigo-500/10 animate-spin" />
+            <span className="text-slate-600 dark:text-slate-400 text-sm font-semibold">Loading word details...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !wordData) {
+    return (
+      <div className="min-h-screen bg-background text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+        <Navbar />
+        <main className="flex-1 max-w-3xl w-full mx-auto p-6 md:p-8 flex flex-col items-center justify-center text-center">
+          <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 text-red-650 dark:text-red-400 rounded-2xl flex items-center justify-center mb-6">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold mb-2">Error Loading Word</h2>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-8 font-medium">{error || "Word not found."}</p>
+          <Link
+            href="/words"
+            className="py-3 px-6 bg-card border border-border hover:bg-card-hover text-slate-700 dark:text-slate-350 font-semibold rounded-2xl transition-all"
+          >
+            Back to Word Bank
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+      <Navbar />
+
+      <main className="flex-1 max-w-4xl w-full mx-auto p-6 md:p-8 relative">
+        <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-violet-600/5 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-indigo-600/5 blur-[120px] pointer-events-none" />
+
+        <div className="relative z-10 space-y-6">
+          <div className="flex justify-between items-center">
+            <Link
+              href="/words"
+              className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-sm font-semibold transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back to Word Bank
+            </Link>
+
+            {isAuthor && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="py-2.5 px-4 bg-red-500/10 border border-red-500/20 hover:border-red-500/40 text-red-650 dark:text-red-400 text-xs font-bold rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+              >
+                {deleting ? "Deleting..." : "Delete Word"}
+              </button>
+            )}
+          </div>
+
+          <div className="backdrop-blur-xl bg-card border border-border rounded-3xl p-8 shadow-2xl">
+            <div className="border-b border-border pb-6 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <h1 className="text-4xl sm:text-5xl font-black capitalize bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-600 dark:from-violet-400 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent tracking-tight">
+                  {wordData.word}
+                </h1>
+                {wordData.createdBy && (
+                  <p className="text-slate-550 dark:text-slate-400 text-xs mt-2 font-semibold">
+                    Submitted by <span className="text-slate-800 dark:text-slate-350 font-bold">@{wordData.createdBy.username}</span> ({wordData.createdBy.fullname})
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-8 mb-8">
+              <div>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Definitions</h2>
+                <div className="space-y-6">
+                  {wordData.definitions.map((def, idx) => (
+                    <div key={idx} className="flex gap-4 items-start group">
+                      <span className="text-xs font-bold font-mono uppercase px-2 py-0.5 rounded bg-violet-600/10 text-violet-600 dark:text-violet-400 border border-violet-500/10 shrink-0 mt-0.5 select-none">
+                        {def.partOfSpeech}
+                      </span>
+                      <p className="text-slate-800 dark:text-slate-300 text-sm sm:text-base leading-relaxed font-medium">
+                        {def.definition}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-border pt-8 mb-8">
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-505 dark:text-slate-400 mb-3">Synonyms</h3>
+                {wordData.synonyms.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {wordData.synonyms.map((syn, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs py-1.5 px-3 rounded-xl bg-background border border-border text-indigo-600 dark:text-indigo-400 font-semibold capitalize"
+                      >
+                        {syn}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-xs italic">No synonyms available.</p>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-505 dark:text-slate-400 mb-3">Antonyms</h3>
+                {wordData.antonyms.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {wordData.antonyms.map((ant, idx) => (
+                      <span
+                        key={idx}
+                        className="text-xs py-1.5 px-3 rounded-xl bg-background border border-border text-pink-650 dark:text-pink-400 font-semibold capitalize"
+                      >
+                        {ant}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-slate-500 text-xs italic">No antonyms available.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-8">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-4">Sentence Examples</h3>
+              {wordData.examples.length > 0 ? (
+                <ul className="space-y-4">
+                  {wordData.examples.map((ex, idx) => (
+                    <li key={idx} className="flex gap-4 items-start text-sm sm:text-base">
+                      <span className="w-6 h-6 rounded-full bg-background border border-border text-[10px] font-bold text-slate-550 dark:text-slate-400 flex items-center justify-center shrink-0 mt-0.5 select-none">
+                        {idx + 1}
+                      </span>
+                      <p className="text-slate-800 dark:text-slate-300 italic leading-relaxed font-medium">
+                        "{ex}"
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-slate-500 text-xs italic">No example sentences available.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

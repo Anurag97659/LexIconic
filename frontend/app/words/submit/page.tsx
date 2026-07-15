@@ -1,0 +1,138 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Navbar from "../../../components/Navbar";
+import { apiFetch } from "../../../utils/api";
+
+const loadingSteps = [
+  "Connecting to Gemini AI...",
+  "Retrieving dictionary definition...",
+  "Formatting parts of speech (noun, adjective, adverb)...",
+  "Curating exact synonyms and antonyms...",
+  "Composing contextual sentence examples...",
+  "Saving word entry to database..."
+];
+
+export default function SubmitWordPage() {
+  const router = useRouter();
+  const [word, setWord] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadingStepIdx, setLoadingStepIdx] = useState(0);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Redirect to login if user is not authenticated
+    apiFetch("/WoahCab/users/getProfile").catch(() => {
+      router.push("/login");
+    });
+  }, [router]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (loading) {
+      interval = setInterval(() => {
+        setLoadingStepIdx((prev) => (prev + 1) % loadingSteps.length);
+      }, 2000);
+    } else {
+      setLoadingStepIdx(0);
+    }
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!word.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await apiFetch("/WoahCab/words/createword", {
+        method: "POST",
+        body: JSON.stringify({ word: word.trim() }),
+      });
+      router.push("/words");
+    } catch (err: any) {
+      setError(err.message || "Failed to generate word details");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-300">
+      <Navbar />
+
+      <main className="flex-1 flex items-center justify-center p-6 relative">
+        <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-violet-600/5 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-indigo-600/5 blur-[120px] pointer-events-none" />
+
+        <div className="w-full max-w-lg relative z-10">
+          {loading ? (
+            <div className="backdrop-blur-xl bg-card border border-border rounded-3xl p-12 text-center shadow-2xl">
+              <div className="relative w-24 h-24 mx-auto mb-8 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-4 border-violet-500/20 animate-ping" />
+                <div className="absolute inset-2 rounded-full border-4 border-t-violet-500 border-indigo-500/10 animate-spin" />
+                <svg className="w-8 h-8 text-violet-500 dark:text-violet-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+
+              <h2 className="text-xl font-bold mb-2">Analyzing word: "{word}"</h2>
+              <p className="text-violet-650 dark:text-violet-450 font-bold text-sm min-h-[20px] transition-all duration-300">
+                {loadingSteps[loadingStepIdx]}
+              </p>
+            </div>
+          ) : (
+            <div className="backdrop-blur-xl bg-card border border-border rounded-3xl p-8 shadow-2xl transition-all duration-300 hover:border-violet-500/20">
+              <div className="mb-6">
+                <h1 className="text-2xl font-bold mb-1">Add New Word</h1>
+                <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">
+                  Type any English word. Gemini AI will automatically fetch the definition, part of speech, antonyms, synonyms, and sentences.
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm text-center font-medium">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider mb-2">
+                    English Word
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={word}
+                    onChange={(e) => setWord(e.target.value)}
+                    placeholder="e.g. ephemeral"
+                    className="w-full px-5 py-4 bg-background border border-border rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/30 transition-all font-medium"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => router.push("/words")}
+                    className="flex-1 py-4 px-6 bg-card border border-border hover:bg-card-hover text-slate-700 dark:text-slate-350 font-semibold rounded-2xl transition-all active:scale-95 text-sm cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-2 py-4 px-6 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-600/20 active:scale-95 text-sm"
+                  >
+                    Generate & Add
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}

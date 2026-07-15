@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate-900 */
+  --card: #f8fafc;       /* Slate-50 */
+  --card-hover: #f1f5f9; /* Slate-100 */
+  --border: #e2e8f0;     /* Slate-200 */
+  --text-muted: #64748b; /* Slate-500 */
+  --accent: #4f46e5;     /* Indigo-600 */
+}
+
+html.dark {
+  --background: #0d1117; /* GitHub Dark background */
+  --foreground: #c9d1d9; /* GitHub Dark text primary */
+  --card: #161b22;       /* GitHub Dark card/container background */
+  --card-hover: #1f242c; /* Slightly lighter card hover */
+  --border: #30363d;     /* GitHub Dark border */
+  --text-muted: #8b949e; /* GitHub Dark text secondary */
+  --accent: #58a6ff;     /* GitHub Dark accent (blue) */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
