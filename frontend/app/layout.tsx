@@ -16,7 +16,16 @@ export const metadata: Metadata = {
   title: "LexIconic",
   description: "A dictionary of words and phrases from the English language, with definitions, synonyms, antonyms, and example sentences.",
   icons: {
-    icon: "../public/logo.jpg",
+    icon: [
+      {
+        url: "/favicon.ico?v=2",
+        type: "image/x-icon",
+      },
+      {
+        url: "/logo.jpg?v=2",
+        type: "image/jpeg",
+      },
+    ],
   },
 };
 
