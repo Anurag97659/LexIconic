@@ -19,6 +19,8 @@ interface WordItem {
   antonyms: string[];
   examples: string[];
   note?: string;
+  createdAt?: string; 
+  updatedAt?: string;
   createdBy?: {
     _id: string;
     username: string;
