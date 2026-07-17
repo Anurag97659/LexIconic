@@ -33,7 +33,14 @@ A premium, AI-powered vocabulary bank and dictionary companion built with Next.j
 *   **Change Password**: Secure password update forms verified against current credentials.
 *   **Account Deletion (Danger Zone)**: Fully erase user credentials and details from the database with double-confirmation prompts.
 
-### 6. GitHub Dark & Light Themes
+### 6. AI MCQ Vocabulary Test
+*   **Gemini-Powered Tests**: Generates exactly **20 multiple-choice questions (MCQs)** dynamically based on words stored in your vocabulary database.
+*   **Competitive Exam Style**: Targets advanced grammar and vocab levels matching AFCAT, CDS, and other competitive exams.
+*   **Independent Distractors**: Question stems are based on database words, but option choices (A, B, C, D) are created dynamically by AI to remain independent and challenging.
+*   **Google Forms-Style Review**: After submitting, users immediately view their overall score alongside color-coded feedback (green for correct answers, red for incorrect selections) showing correct choices.
+*   **Fully Ephemeral**: Tests are run in-memory and are not saved, allowing students to test themselves, reset, and instantly generate fresh tests.
+
+### 7. GitHub Dark & Light Themes
 *   **Dial-Gear Switcher**: Toggle themes instantly via a rotating dial gear inside the navbar.
 *   **GitHub Dark Mode styling**: Dark theme modeled precisely after GitHub's official `#0d1117` background theme with high-contrast slate text and `#161b22` container panels.
 
