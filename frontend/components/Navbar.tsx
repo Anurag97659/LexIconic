@@ -8,7 +8,7 @@ import { apiFetch } from "../utils/api";
 export default function Navbar() {
   const router = useRouter();
   const [username, setUsername] = useState("");
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
 
@@ -26,14 +26,12 @@ export default function Navbar() {
 
     // 2. Initialize theme from localStorage
     const savedTheme = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    
-    if (savedTheme === "light" || (!savedTheme && !systemPrefersDark)) {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    } else {
+    if (savedTheme === "dark") {
       setTheme("dark");
       document.documentElement.classList.add("dark");
+    } else {
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 

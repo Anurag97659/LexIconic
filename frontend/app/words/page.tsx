@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../../components/Navbar";
 import { apiFetch } from "../../utils/api";
+import PronunciationEngine from "../../components/PronunciationEngine";
 
 interface Definition {
   partOfSpeech: string;
@@ -14,6 +15,7 @@ interface Definition {
 interface WordItem {
   _id: string;
   word: string;
+  phonetic?: string;
   definitions: Definition[];
   synonyms: string[];
   antonyms: string[];
@@ -288,13 +290,16 @@ const formatUploadDate = (date?: string) => {
 
                   <Link href={`/words/details?id=${item._id}`} className="block h-full">
                   <div>
-                    <div className="flex items-center justify-between gap-3 mb-4 pr-10">
-                      <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-violet-650 dark:group-hover:text-violet-400 transition-colors capitalize">
-                        {item.word}
-                      </h2>
+                    <div className="flex flex-col gap-1 mb-4 pr-10">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 group-hover:text-violet-650 dark:group-hover:text-violet-400 transition-colors capitalize">
+                          {item.word}
+                        </h2>
+                        <PronunciationEngine word={item.word} showAccentSelector={false} size="sm" />
+                      </div>
                       {item.createdBy && (
-                        <span className="text-[10px] bg-background border border-border px-2.5 py-1 rounded-lg text-slate-500 dark:text-slate-455 font-bold uppercase tracking-wider">
-                          @{item.createdBy.username}{item.createdAt && ` · ${formatUploadDate(item.createdAt)}`}
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                          by @{item.createdBy.username}{item.createdAt && ` · ${formatUploadDate(item.createdAt)}`}
                         </span>
                       )}
                     </div>

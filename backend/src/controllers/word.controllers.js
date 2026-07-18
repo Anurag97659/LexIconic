@@ -5,8 +5,7 @@ import { Word } from "../models/word.model.js";
 import { User } from "../models/user.model.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Notes are personal. Never return the notes array because it can contain
-// notes belonging to other users. A viewer receives only their own note.
+
 const formatWordForViewer = (word, userId) => {
   const wordObject = word.toObject ? word.toObject() : word;
   const { notes = [], starredBy = [], ...safeWord } = wordObject;
@@ -33,21 +32,17 @@ const createWord = asyncHandler(async (req, res) => {
   }
 
   const cleanWord = word.trim().toLowerCase();
-
-  // Check if word already exists in the database
   const existingWord = await Word.findOne({ word: cleanWord });
   if (existingWord) {
     throw new ApiError(409, "Word already exists in the database");
   }
 
-  // Verify Gemini API key is configured
   if (!process.env.GEMINI_API_KEY) {
     throw new ApiError(500, "GEMINI_API_KEY is not configured in backend environment variables");
   }
 
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    // Use gemini-2.5-flash which is fast and supports JSON schema output
     const model = genAI.getGenerativeModel({
       model: "gemini-3.1-flash-lite",
       generationConfig: { responseMimeType: "application/json" }
@@ -56,6 +51,7 @@ const createWord = asyncHandler(async (req, res) => {
     const prompt = `Generate a vocabulary dictionary entry for the English word "${cleanWord}". 
 Return a JSON object matching this exact structure:
 {
+  "phonetic": "Standard International Phonetic Alphabet (IPA) representation of the word (e.g. /ɪˈfemərəl/)",
   "definitions": [
     {
       "partOfSpeech": "noun" (or "adverb", "adjective", "verb", etc.),
@@ -87,6 +83,7 @@ Provide definitions for different parts of speech if applicable (e.g. noun, adje
 
     const newWord = await Word.create({
       word: cleanWord,
+      phonetic: generatedData.phonetic || "",
       definitions: generatedData.definitions,
       synonyms: generatedData.synonyms || [],
       antonyms: generatedData.antonyms || [],
@@ -329,7 +326,6 @@ const generateTest = asyncHandler(async (req, res) => {
     throw new ApiError(400, "No words found in the database. Please add some words first to generate a test.");
   }
 
-  // Shuffle and select up to 20 words
   const shuffled = words.sort(() => 0.5 - Math.random());
   const selectedWords = shuffled.slice(0, 20);
 

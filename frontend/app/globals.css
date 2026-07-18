@@ -35,6 +35,14 @@ html.dark {
   --color-accent: var(--accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* LexIconic Custom Color Mapping to ensure light-mode visibility */
+  --color-violet-650: #7c3aed;
+  --color-indigo-650: #4f46e5;
+  --color-pink-650: #db2777;
+  --color-slate-450: #64748b;
+  --color-slate-505: #64748b;
+  --color-slate-550: #475569;
 }
 
 body {
@@ -42,4 +50,29 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@keyframes soundwave {
+  0%, 100% {
+    transform: scaleY(0.2);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-wave-1 {
+  animation: soundwave 0.8s ease-in-out infinite;
+}
+
+.animate-wave-2 {
+  animation: soundwave 0.8s ease-in-out infinite 0.15s;
+}
+
+.animate-wave-3 {
+  animation: soundwave 0.8s ease-in-out infinite 0.3s;
+}
+
+.animate-wave-4 {
+  animation: soundwave 0.8s ease-in-out infinite 0.45s;
 }

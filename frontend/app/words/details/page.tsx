@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "../../../components/Navbar";
 import { apiFetch } from "../../../utils/api";
+import PronunciationEngine from "../../../components/PronunciationEngine";
 
 interface Definition {
   partOfSpeech: string;
@@ -14,6 +15,7 @@ interface Definition {
 interface WordItem {
   _id: string;
   word: string;
+  phonetic?: string;
   definitions: Definition[];
   synonyms: string[];
   antonyms: string[];
@@ -227,12 +229,20 @@ const handleDeleteNote = async () => {
             <div className="border-b border-border pb-6 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div className="flex items-start gap-3">
                 <div>
-                  <h1 className="text-4xl sm:text-5xl font-black capitalize bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-600 dark:from-violet-400 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent tracking-tight">
-                    {wordData.word}
-                  </h1>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <h1 className="text-4xl sm:text-5xl font-black capitalize bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-600 dark:from-violet-400 dark:via-indigo-200 dark:to-indigo-400 bg-clip-text text-transparent tracking-tight">
+                      {wordData.word}
+                    </h1>
+                    <PronunciationEngine word={wordData.word} showAccentSelector={true} size="md" />
+                  </div>
+                  {wordData.phonetic && (
+                    <p className="text-violet-600 dark:text-violet-400 font-mono font-bold text-lg mt-1.5 tracking-wide">
+                      {wordData.phonetic}
+                    </p>
+                  )}
                   {wordData.createdBy && (
                     <p className="text-slate-550 dark:text-slate-400 text-xs mt-2 font-semibold">
-                      Submitted by <span className="text-slate-800 dark:text-slate-350 font-bold">@{wordData.createdBy.username}</span> ({wordData.createdBy.fullname}) ({wordData.createdAt && `${new Date(wordData.createdAt).toLocaleDateString()}`})
+                      Submitted by <span className="text-slate-800 dark:text-slate-355 font-bold">@{wordData.createdBy.username}</span> ({wordData.createdBy.fullname}) ({wordData.createdAt && `${new Date(wordData.createdAt).toLocaleDateString()}`})
                     </p>
                   )}
                 </div>
