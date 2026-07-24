@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lexiconic.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lexiconic.onrender.com";
   const currentDate = new Date();
 
   return [
